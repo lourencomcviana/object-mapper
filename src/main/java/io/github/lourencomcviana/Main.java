@@ -1,4 +1,4 @@
-package com.br.object.path;
+package io.github.lourencomcviana;
 
 import lombok.Getter;
 import lombok.var;

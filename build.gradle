@@ -7,7 +7,7 @@ plugins {
 apply plugin: 'java'
 apply plugin: 'idea'
 
-group = 'com.br.lmcviana'
+group = 'io.github.lourencomcviana'
 version = '0.0.1'
 
 description = "object-mapper"
