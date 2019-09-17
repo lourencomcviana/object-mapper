@@ -10,3 +10,6 @@ Map Objects
   - `java -jar object-mapper-x.x.jar `
 - Exe 
   - `java -jar ./build/libs/object-mapper-1.1.jar`
+
+
+gpg --export-secret-keys > ~/.gpug/ring.key
