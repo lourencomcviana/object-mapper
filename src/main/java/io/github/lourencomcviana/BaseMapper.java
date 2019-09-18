@@ -1,6 +1,5 @@
 package io.github.lourencomcviana;
 
-import io.github.lourencomcviana.PropertyReader;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +13,7 @@ import static io.github.lourencomcviana.PropertyReader.getPropertyValue;
 @Slf4j
 public abstract class BaseMapper<T,N> {
 
-    public BaseMapper(Class<T> firstClass, Class<N> secondClass){
+    BaseMapper(Class<T> firstClass, Class<N> secondClass){
         this.isEqual = firstClass == secondClass;
         this.firstClass=firstClass;
         this.secondClass=secondClass;
@@ -32,7 +31,8 @@ public abstract class BaseMapper<T,N> {
         mappings.put(FirstField,SecondField);
     }
 
-    protected T convertSecondToFirst(N item ){
+    @SuppressWarnings("unchecked")
+    T convertSecondToFirst(N item ){
         if(item!=null) {
             //ignora código de conversão se for a mesma classe para Second e entidade
             if (isEqual) {
@@ -47,7 +47,8 @@ public abstract class BaseMapper<T,N> {
     }
 
 
-    protected N convertFirstToSecond(T item ){
+    @SuppressWarnings("unchecked")
+    N convertFirstToSecond(T item ){
         if(item!=null) {
             if (isEqual) {
                 return (N) item;
@@ -60,15 +61,15 @@ public abstract class BaseMapper<T,N> {
         return null;
     }
 
-    protected Collection<T> firstToList(Optional<T> item){
+    private Collection<T> firstToList(Optional<T> item){
         return itemToList(item);
     }
 
-    protected Collection<N> secondToList(Optional<N> item){
+    private Collection<N> secondToList(Optional<N> item){
         return itemToList(item);
     }
 
-    private Collection itemToList(Optional item){
+    public Collection itemToList(Optional item){
         if(item.isPresent()) {
             var list = new LinkedList<>();
             list.add(item.get());
@@ -84,6 +85,7 @@ public abstract class BaseMapper<T,N> {
     protected  Collection<T> convertSecondToListFirst(Optional<N> item ){
         return convertListSecondToListFirst(secondToList(item));
     }
+    @SuppressWarnings("unchecked")
     protected Collection<N> convertListFirstToListSecond(Collection<T> itens ) {
         if (itens != null) {
             var newList = new LinkedList<N>();
@@ -99,7 +101,7 @@ public abstract class BaseMapper<T,N> {
             return null;
         }
     }
-
+    @SuppressWarnings("unchecked")
     protected Collection<T> convertListSecondToListFirst(Collection<N> itens ){
         if(itens!=null  ) {
             if (isEqual) {
@@ -162,7 +164,7 @@ public abstract class BaseMapper<T,N> {
         }
     }
 
-    protected T newFirst(){
+    private T newFirst(){
         try {
             return firstClass.newInstance();
         }catch (Exception e){
@@ -170,7 +172,7 @@ public abstract class BaseMapper<T,N> {
             return null;
         }
     }
-    protected N newSecond(){
+    private N newSecond(){
         try {
             return secondClass.newInstance();
         }catch (Exception e){
