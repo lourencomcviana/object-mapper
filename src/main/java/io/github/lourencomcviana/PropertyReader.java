@@ -1,4 +1,4 @@
-package io.github.lourencomcviana.mapper;
+package io.github.lourencomcviana;
 
 import lombok.extern.slf4j.Slf4j;
 

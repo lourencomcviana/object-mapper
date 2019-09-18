@@ -1,4 +1,4 @@
-package io.github.lourencomcviana.mapper;
+package io.github.lourencomcviana;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,13 +21,14 @@ public class StringUtil {
         }
     }
 
-    public static String normalizer(String s)  {
-        return Normalizer.normalize(s, Normalizer.Form.NFD).replaceAll("[^\\p{ASCII}]", "");
+    public static String normalizerStrong(String s)  {
+
+        return Normalizer.normalize(normalizer(s), Normalizer.Form.NFD).replaceAll("[^\\p{ASCII}]", "");
     }
 
-    public static String replacer(String param) {
-        String t1 = "áãàâäçéèëêùûüúóôöïîíÁÀÂÄÃÇÉÈËÊÙÛÜÚÓÔÖÏÎÍ";
-        String t2 = "aaaaaceeeeuuuuoooiiiAAAAACEEEEUUUUOOOIII";
+    public static String normalizer(String param) {
+        String t1 = "áãàâäçéèëêùûüúóôöõïîíìÁÀÂÄÃÇÉÈËÊÙÛÜÚÓÔÖÕÏÎÍÌ";
+        String t2 = "aaaaaceeeeuuuuooooiiiiAAAAACEEEEUUUUOOOOIIII";
         String s = param;
         for (int i = 0; i < t1.length(); i++) {
             s = "replace(" + s + ",'" + t1.charAt(i) + "','" + t2.charAt(i) + "')";

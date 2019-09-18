@@ -1,4 +1,4 @@
-package io.github.lourencomcviana.mapper;
+package io.github.lourencomcviana;
 
 import lombok.Builder;
 import lombok.Getter;
