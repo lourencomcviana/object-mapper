@@ -6,9 +6,9 @@ import lombok.Setter;
 import lombok.var;
 
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.regex.Matcher;
@@ -188,6 +188,28 @@ public class DateUtil{
           }catch(Exception e){
           }
           return null;
+    }
+
+
+    public static LocalDate parseDateToLocalDate(Date value){
+        return parseDateToLocalDate(value,ZoneId.systemDefault());
+    }
+
+    public static LocalDate parseDateToLocalDate(Date value,ZoneId zoneId){
+        return parseDateToZoneDateTime(value,zoneId).toLocalDate();
+    }
+
+    public static LocalDateTime parseDateToLocalDateTime(Date value){
+        return parseDateToLocalDateTime(value,ZoneId.systemDefault());
+    }
+
+    public static LocalDateTime parseDateToLocalDateTime(Date value,ZoneId zoneId){
+        return parseDateToZoneDateTime(value,zoneId).toLocalDateTime();
+    }
+
+    public static ZonedDateTime parseDateToZoneDateTime(Date value, ZoneId zoneId){
+        return Instant.ofEpochMilli(value.getTime())
+                .atZone(zoneId);
     }
 
     enum DateOrder{
