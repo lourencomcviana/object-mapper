@@ -304,4 +304,55 @@ public class PropertyReader{
         updateFirst(a,b);
         return a;
     }
+
+    public static boolean validField(Object objeto,String fieldName){
+        if(objeto != null && fieldName != null && fieldName.length()>0) {
+            String propertyName = "get";
+            String isPropertyName = "is";
+            if(Character.isLowerCase(fieldName.charAt(0))){
+                char chars[] = fieldName.toCharArray();
+                chars[0] = Character.toUpperCase(chars[0]);
+                propertyName +=  new String(chars);
+                isPropertyName +=new String(chars);
+            }else{
+                propertyName += fieldName;
+                isPropertyName +=new String(fieldName);
+            }
+            Method method;
+            try {
+                method = objeto.getClass().getMethod(propertyName, null);
+            }catch (Exception e){
+                try {
+                    method = objeto.getClass().getMethod(isPropertyName, null);
+                }catch (Exception ex){
+                    return false;
+                }
+            }
+
+            if (method!=null) {
+                try {
+                    Object result = method.invoke(objeto );
+                    return isValid(result);
+
+                } catch (Exception e) {
+                }
+            }
+        }
+        return false;
+    }
+
+    public static boolean isValid(Object object){
+        if(object == null){
+            return  false;
+        }
+        if(object.getClass() == String.class && ((String)object).isEmpty()) {
+            return false;
+        }
+
+        if (object instanceof Collection) {
+            return !((Collection<?>) object).isEmpty();
+        }
+
+        return true;
+    }
 }

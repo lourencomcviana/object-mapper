@@ -19,6 +19,11 @@ import java.util.regex.Pattern;
 @Builder
 public class DateUtil{
 
+    @Getter
+    @Setter
+    private static ZoneId defaultZoneId = ZoneId.systemDefault();
+
+
     Integer  ano;
     Integer  mes;
     Integer  dia;
@@ -192,7 +197,7 @@ public class DateUtil{
 
 
     public static LocalDate parseDateToLocalDate(Date value){
-        return parseDateToLocalDate(value,ZoneId.systemDefault());
+        return parseDateToLocalDate(value,defaultZoneId);
     }
 
     public static LocalDate parseDateToLocalDate(Date value,ZoneId zoneId){
@@ -200,7 +205,7 @@ public class DateUtil{
     }
 
     public static LocalDateTime parseDateToLocalDateTime(Date value){
-        return parseDateToLocalDateTime(value,ZoneId.systemDefault());
+        return parseDateToLocalDateTime(value,defaultZoneId);
     }
 
     public static LocalDateTime parseDateToLocalDateTime(Date value,ZoneId zoneId){
