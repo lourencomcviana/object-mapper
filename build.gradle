@@ -23,7 +23,7 @@ apply plugin: 'maven'
 
 archivesBaseName = 'object-mapper'
 group = 'io.github.lourencomcviana'
-version = '0.0.6-SNAPSHOT'
+version = '0.0.7-SNAPSHOT'
 
 description = "object-mapper"
 
@@ -39,8 +39,9 @@ repositories {
 //    maven {
 //        url  "https://dl.bintray.com/lourencomcviana/io.github.lourencomcviana"
 //    }
-    jcenter()
     mavenCentral()
+    jcenter()
+
     flatDir {
         dirs 'lib'
     }
@@ -53,6 +54,8 @@ dependencies {
     compile group: 'org.slf4j', name:'slf4j-api', version: '1.7.2'
     compile group: 'ch.qos.logback', name:'logback-classic', version: '1.0.9'
     compile group: 'ch.qos.logback', name:'logback-core', version: '1.0.9'
+
+    compile group: 'org.modelmapper', name: 'modelmapper', version: '2.3.5'
 
     compileOnly 'org.projectlombok:lombok:1.18.10'
     annotationProcessor 'org.projectlombok:lombok:1.18.10'
@@ -81,3 +84,7 @@ nexus {
 //    key = "${bintray.password}"
 //
 //}
+
+test {
+    useJUnitPlatform()
+}
