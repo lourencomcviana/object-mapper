@@ -1,5 +1,6 @@
 package io.github.lourencomcviana;
 
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -8,24 +9,43 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Slf4j
 public class PropertyReader{
 
-    private static LinkedList<String> parsePath(String path){
-        String[] parts = path.split("\\.");
-        if(parts.length >0){
-            LinkedList<String> arr=new LinkedList<String>(Arrays.asList(parts));
-            return arr;
-        }
-        return new LinkedList<>();
+    private static final String[] GET_METHOD_ALIASES =  new String []{"get","is","has"};
+
+    public static <T> T get(Object obj, String string) {
+        return getPropertyValue(obj,parsePath(string));
     }
+
+    public static <T> T set(Object obj, String string) {
+        return getPropertyValue(obj,parsePath(string));
+    }
+
+    public static <T> T get(Object obj, Iterable<String> parts) {
+        return getPropertyValue(obj,castToLinkedList(parts));
+    }
+
+    public static <T> T set(Object obj,Iterable<String> parts) {
+        return getPropertyValue(obj,castToLinkedList(parts));
+    }
+
+    public static <T> T get(Object obj, String[] parts) {
+        return getPropertyValue(obj, new LinkedList<>(Arrays.asList(parts)));
+    }
+
+    public static <T> T set(Object obj,String[] parts) {
+        return getPropertyValue(obj, new LinkedList<>(Arrays.asList(parts)));
+    }
+
 
     @SuppressWarnings("unchecked")
     public static <T> T getPropertyValue(Object obj, String string) {
         return getPropertyValue(obj,parsePath(string));
     }
-
     @SuppressWarnings("unchecked")
     public static <T> T getPropertyValue(Object obj, LinkedList<String> parts) {
         return propertyValue(obj,parts,null);
@@ -105,23 +125,24 @@ public class PropertyReader{
         return (T) ret;
     }
 
-    public static Optional<Method> findMethod(String methodName, Class clazz){
+    public static Optional<Method> findMethod(String methodName, Class clazz, int paramCount){
         Optional<Method> foundMethod = Arrays.stream(clazz
-                .getDeclaredMethods()).filter(item -> item.getName().equals(methodName) && item.getParameters().length==1)
+                .getDeclaredMethods()).filter(item -> item.getName().equals(methodName) && item.getParameters().length==paramCount)
                 .findFirst();
         if(foundMethod.isPresent()){
             return foundMethod;
         } else if(clazz.getSuperclass()!= Object.class){
-            return findMethod(methodName,clazz.getSuperclass());
+            return findMethod(methodName,clazz.getSuperclass(),paramCount);
         } else {
             return Optional.empty();
         }
     }
 
+
     private static Object setNewValue(String field, Object objectMethod){
         String methodName = toSetPropertyName(field);
         try {
-            Optional<Method> foundMethod = findMethod(methodName,objectMethod.getClass());
+            Optional<Method> foundMethod = findMethod(methodName,objectMethod.getClass(),1);
 //                    Arrays.stream(objectMethod.getClass()
 //                    .getDeclaredMethods()).filter(item -> item.getName().equals(methodName) && item.getParameters().length==1)
 //                    .findFirst();
@@ -164,14 +185,67 @@ public class PropertyReader{
         }
     }
 
-
     public static String toGetPropertyName(String field){
-        return "get" +field.substring(0, 1).toUpperCase() + field.substring(1);
+        return toGetPropertyName(field,null);
+    }
+    public static String toGetPropertyName(String field, Class clazz){
+        Optional<Method> method =getPropertyMethod(field,clazz);
+        return method.map(Method::getName)
+                .orElse("get"+fieldNameToPropName(field));
+    }
+
+    public static Optional<Method> getPropertyMethod(String fieldOrMethodName,Class clazz){
+        String prop;
+
+        if(clazz == null){
+            return Optional.empty();
+        }
+
+        if( Arrays.stream(GET_METHOD_ALIASES).anyMatch(fieldOrMethodName::startsWith)){
+            return findMethod( fieldOrMethodName,clazz,0);
+        }
+
+        return getPropertyMethod(fieldNameToPropName(fieldOrMethodName),0,clazz);
+    }
+
+    private static Optional<Method> getPropertyMethod(@NonNull String field,int id, @NonNull Class clazz){
+        if(id>=GET_METHOD_ALIASES.length){
+            return Optional.empty();
+        }
+
+        Optional<Method> found = findMethod(GET_METHOD_ALIASES[id]+field,clazz,0);
+        if(found.isPresent()){
+            return found;
+        }
+        return getPropertyMethod(field, id + 1, clazz);
+    }
+
+    private  static String fieldNameToPropName(String field){
+        return field.substring(0, 1).toUpperCase() + field.substring(1);
+    }
+
+
+    public static Optional<Method> setPropertyMethod(@NonNull String field, @NonNull Class clazz, @NonNull Class parameter){
+
+        String methodName = toSetPropertyName(field);
+        try {
+            java.lang.reflect.Method method = clazz.getMethod(methodName, parameter);
+            return Optional.of(method);
+        }catch(Exception e) {
+            return Optional.empty();
+        }
     }
 
     public static String toSetPropertyName(String field){
-        return "set" +field.substring(0, 1).toUpperCase() + field.substring(1);
+        if(field.startsWith("set")){
+            return field;
+        }
+        return "set" + fieldNameToPropName(field);
     }
+
+
+
+
 
     public static String toFieldName(String property){
         property = property.substring(3);
@@ -354,5 +428,20 @@ public class PropertyReader{
         }
 
         return true;
+    }
+
+
+    private static LinkedList<String> parsePath(String path){
+        String[] parts = path.split("\\.");
+        if(parts.length >0){
+            LinkedList<String> arr=new LinkedList<String>(Arrays.asList(parts));
+            return arr;
+        }
+        return new LinkedList<>();
+    }
+
+    private static<T> LinkedList<T> castToLinkedList(Iterable<T> itens){
+        return StreamSupport.stream(itens.spliterator(), false)
+                .collect(Collectors.toCollection(LinkedList::new));
     }
 }
