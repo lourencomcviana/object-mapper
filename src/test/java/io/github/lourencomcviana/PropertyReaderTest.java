@@ -1,10 +1,8 @@
 package io.github.lourencomcviana;
 
-import io.github.lourencomcviana.mapper.test.Customer;
-import io.github.lourencomcviana.mapper.test.Name;
-import io.github.lourencomcviana.mapper.test.Order;
-import io.github.lourencomcviana.mapper.test.OrderDTO;
+import io.github.lourencomcviana.mapper.test.*;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.modelmapper.ModelMapper;
 
@@ -12,10 +10,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class PropertyReaderTest {
 
-    private static Order order;
+    private  Order order;
 
-    @BeforeAll
-    public static void build(){
+    @BeforeEach
+    public  void build(){
         order = Order.builder()
                     .payd(false)
                     .sauce(true)
@@ -24,7 +22,6 @@ public class PropertyReaderTest {
                             .name(
                                 Name.builder()
                                     .firstName("maria")
-                                    .lastName("antoni")
                                 .build()
                             )
                         .build())
@@ -45,4 +42,57 @@ public class PropertyReaderTest {
    }
 
 
+
+    @DisplayName("test if method finding is working properly")
+    @org.junit.jupiter.api.Test
+    void getProperty() {
+
+        assertEquals("maria",PropertyReader.get(order,"customer.name.firstName")
+                ,"get firstName from customer insider order");
+
+        assertEquals("maria",PropertyReader.get(order,new String[]{"customer","name","firstName"})
+                ,"get firstName from customer insider order");
+    }
+
+    @DisplayName("test if method finding is working properly")
+    @org.junit.jupiter.api.Test
+    void setProperty() {
+        PropertyReader.set(order,"customer.name.firstName","maria2");
+
+        assertEquals("maria2",order.getCustomer().getName().getFirstName()
+                ,"get firstName from customer insider order");
+
+
+        PropertyReader.set(order,"customer.name.lastName","ultimo nome");
+        assertEquals("ultimo nome",order.getCustomer().getName().getLastName()
+                ,"get firstName from customer insider order");
+
+    }
+
+    @DisplayName("test if method finding is working properly")
+    @org.junit.jupiter.api.Test
+    void setPropertyOnNonInstantiatedObject() {
+        PropertyReader.set(order,"billingAddress.street","rua1");
+        assertEquals("rua1",order.getBillingAddress().getStreet()
+                ,"set adress street in order");
+
+    }
+
+    @DisplayName("test if method finding is working properly")
+    @org.junit.jupiter.api.Test
+    void setPropertyOnNonInstantiatedListObject() {
+
+        PropertyReader.set(order,"billingAddressArray.street","rua1");
+        assertEquals("rua1",order.getBillingAddressArray()[0].getStreet()
+                ,"set adress street in order");
+
+
+        //TODO: not implemented
+        assertEquals(Iterable.class, PropertyReader.get(order,"billingAddressArray.street").getClass()
+                ,"return must be an iterable of all the itens on the array");
+    }
+
 }
+
+
+

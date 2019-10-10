@@ -1,10 +1,13 @@
 package io.github.lourencomcviana;
 
+import io.github.lourencomcviana.exceptions.MethodNotFoundException;
+import io.github.lourencomcviana.exceptions.PropertyNotFoundException;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 
 import java.beans.Statement;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -21,24 +24,24 @@ public class PropertyReader{
         return getPropertyValue(obj,parsePath(string));
     }
 
-    public static <T> T set(Object obj, String string) {
-        return getPropertyValue(obj,parsePath(string));
+    public static <T> void set(Object obj, String string,T value) {
+        setPropertyValue(obj,parsePath(string),value);
     }
 
     public static <T> T get(Object obj, Iterable<String> parts) {
         return getPropertyValue(obj,castToLinkedList(parts));
     }
 
-    public static <T> T set(Object obj,Iterable<String> parts) {
-        return getPropertyValue(obj,castToLinkedList(parts));
+    public static <T> void set(Object obj,Iterable<String> parts,T value) {
+        setPropertyValue(obj,castToLinkedList(parts),value);
     }
 
     public static <T> T get(Object obj, String[] parts) {
         return getPropertyValue(obj, new LinkedList<>(Arrays.asList(parts)));
     }
 
-    public static <T> T set(Object obj,String[] parts) {
-        return getPropertyValue(obj, new LinkedList<>(Arrays.asList(parts)));
+    public static <T> void set(Object obj,String[] parts,T value) {
+        setPropertyValue(obj, new LinkedList<>(Arrays.asList(parts)),value);
     }
 
 
@@ -107,9 +110,11 @@ public class PropertyReader{
                             setValue(field,ret,value);
                         }
 
+                        //ret  =setNewValueCheck(field,ret);
+
                         Object temp = getValue(field,ret);
                         if(temp == null && parts.size() != 0){
-                            temp = setNewValue(field,ret);
+                            temp = setNewValueCheck(field,ret);
                         }
                         ret = temp;
                     }else{
@@ -143,17 +148,25 @@ public class PropertyReader{
         String methodName = toSetPropertyName(field);
         try {
             Optional<Method> foundMethod = findMethod(methodName,objectMethod.getClass(),1);
-//                    Arrays.stream(objectMethod.getClass()
-//                    .getDeclaredMethods()).filter(item -> item.getName().equals(methodName) && item.getParameters().length==1)
-//                    .findFirst();
-
-//
-//            java.lang.reflect.Method method = objectMethod.getClass().getMethod(methodName, value.getClass());
 
             if(foundMethod.isPresent()) {
                 Method method = foundMethod.get();
                 Parameter[] params = method.getParameters();
-                Object newObj = params[0].getType().newInstance();
+
+                Object newObj;
+
+                if(params[0].getType().isArray()){
+                    Class arrayInnerClass = getArrayInnerClass(params[0].getType())
+                            //should never happen. If so i am dumber tham i expected.
+                            .orElseThrow(()->new PropertyNotFoundException(params[0].getType().getName()+" could not be cast to array"));
+
+                    newObj = Array.newInstance(arrayInnerClass ,1);
+
+                    ((Object[])newObj)[0]=arrayInnerClass.newInstance();
+                } else{
+                    newObj = params[0].getType().newInstance();
+                }
+
                 method.invoke(objectMethod, newObj);
 
                 return newObj;
@@ -164,11 +177,48 @@ public class PropertyReader{
         return null;
     }
 
+    private static Optional<Class> getArrayInnerClass (Class clazz){
+        if(clazz.isArray()) {
+            try {
+                String fatherClassName = clazz.getName().substring(2);
+                fatherClassName = fatherClassName.substring(0, fatherClassName.length() - 1);
+                return Optional.of( Class.forName(fatherClassName));
+            }catch (Exception e){
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static Object setNewValueCheck(String field, Object objectMethod){
+        Object temp = getValue(field,objectMethod);
+        if(temp == null){
+            return setNewValue(field,objectMethod);
+        }
+        return temp;
+    }
+
     private static boolean setValue(String field, Object objectMethod, Object value){
-        String methodName = toSetPropertyName(field);
         try {
-            java.lang.reflect.Method method = objectMethod.getClass().getMethod(methodName, value.getClass());
-            method.invoke(objectMethod, value);
+
+
+            if(objectMethod.getClass().isArray()){
+                Object[] array = ((Object[]) objectMethod);
+                for (Object o : array) {
+                    setNewValueCheck(field,o);
+                    setValue(field, o, value);
+                }
+
+            }else{
+                setNewValueCheck(field,objectMethod);
+                Optional<Method> method = setPropertyMethod(field,objectMethod.getClass(),value.getClass());
+
+                if(!method.isPresent()){
+                    return false;
+                }
+                method.get().invoke(objectMethod, value);
+            }
+
+
         }catch(Exception e) {
             return false;
         }
@@ -176,10 +226,13 @@ public class PropertyReader{
     }
 
     private static Object getValue(String field, Object objectMethod){
-        String methodName = toGetPropertyName(field);
+
+       Optional<Method> method = getPropertyMethod(field,objectMethod.getClass());
+       if(!method.isPresent()){
+           return null;
+       }
         try {
-            java.lang.reflect.Method method = objectMethod.getClass().getMethod(methodName, (Class<?>[])null);
-            return method.invoke(objectMethod, (Object[]) null);
+            return method.get().invoke(objectMethod, (Object[]) null);
         }catch(Exception e) {
             return null;
         }
@@ -394,10 +447,10 @@ public class PropertyReader{
             }
             Method method;
             try {
-                method = objeto.getClass().getMethod(propertyName, null);
+                method = objeto.getClass().getMethod(propertyName, (Class<?>) null);
             }catch (Exception e){
                 try {
-                    method = objeto.getClass().getMethod(isPropertyName, null);
+                    method = objeto.getClass().getMethod(isPropertyName, (Class<?>) null);
                 }catch (Exception ex){
                     return false;
                 }
