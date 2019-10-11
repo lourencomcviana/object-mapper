@@ -6,6 +6,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.modelmapper.ModelMapper;
 
+import java.util.Arrays;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class PropertyReaderTest {
@@ -86,10 +88,13 @@ public class PropertyReaderTest {
         assertEquals("rua1",order.getBillingAddressArray()[0].getStreet()
                 ,"set adress street in order");
 
-
-        //TODO: not implemented
-        assertEquals(Iterable.class, PropertyReader.get(order,"billingAddressArray.street").getClass()
+        assertArrayEquals(Arrays.stream(order.getBillingAddressArray()).map(Address::getStreet).toArray(),
+                PropertyReader.get(order,"billingAddressArray.street")
                 ,"return must be an iterable of all the itens on the array");
+//
+//        PropertyReader.set(order,"billingAddressArray.street",new String[]{"rua1","rua2"});
+//        assertEquals("rua1",order.getBillingAddressArray()[0].getStreet()
+//                ,"set adress street in order");
     }
 
 }

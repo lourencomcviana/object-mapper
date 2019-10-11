@@ -76,51 +76,46 @@ public class PropertyReader{
 
             try {
 
-                Class<?> clazz = ret.getClass();
-                if(Iterable.class.isAssignableFrom(clazz)){
-                    if(field.matches("\\d+")){
+//                Class<?> clazz = ret.getClass();
+//                if(Iterable.class.isAssignableFrom(clazz)){
+//                    if(field.matches("\\d+")){
+//
+//                        try{
+//                            Integer id=Integer.parseInt(field);
+//                            ret=((Collection)ret).toArray()[id];
+//                        }catch(ClassCastException  e){
+//                            return null;
+//                        }
+//                        return getPropertyValue(ret,parts);
+//                    }else{
+//                        LinkedList objList= new LinkedList();
+//                        for(Object item :(Iterable)ret){
+//                            LinkedList<String> newParts=(LinkedList<String>)parts.clone();
+//                            newParts.addFirst(field);
+//                            Object objssaida =getPropertyValue(item,newParts);
+//                            // caso a saida tb tenha sido uma lista
+//                            if(Iterable.class.isAssignableFrom(objssaida.getClass())){
+//                                for(Object subItem :(Iterable)objssaida){
+//                                    objList.add(subItem);
+//                                }
+//                            }else{
+//                                objList.add(objssaida);
+//                            }
+//                        }
+//                        return (T)objList;
+//                    }
+//                }else{
+//
+//
+//                }
 
-                        try{
-                            Integer id=Integer.parseInt(field);
-                            ret=((Collection)ret).toArray()[id];
-                        }catch(ClassCastException  e){
-                            return null;
-                        }
-                        return getPropertyValue(ret,parts);
-                    }else{
-                        LinkedList objList= new LinkedList();
-                        for(Object item :(Iterable)ret){
-                            LinkedList<String> newParts=(LinkedList<String>)parts.clone();
-                            newParts.addFirst(field);
-                            Object objssaida =getPropertyValue(item,newParts);
-                            // caso a saida tb tenha sido uma lista
-                            if(Iterable.class.isAssignableFrom(objssaida.getClass())){
-                                for(Object subItem :(Iterable)objssaida){
-                                    objList.add(subItem);
-                                }
-                            }else{
-                                objList.add(objssaida);
-                            }
-                        }
-                        return (T)objList;
+                if(value!=null ) {
+                    if(parts.size() == 0){
+                        setValue(field,ret,value);
                     }
-                }else{
-                    if(value!=null ) {
-                        if(parts.size() == 0){
-                            setValue(field,ret,value);
-                        }
-
-                        //ret  =setNewValueCheck(field,ret);
-
-                        Object temp = getValue(field,ret);
-                        if(temp == null && parts.size() != 0){
-                            temp = setNewValueCheck(field,ret);
-                        }
-                        ret = temp;
-                    }else{
-                        ret = getValue(field,ret);
-                    }
-
+                    ret  =setNewValueCheck(field,ret);
+                } else {
+                    ret = getValue(field,ret);
                 }
             }catch( SecurityException e) {
                 return null;
@@ -225,14 +220,22 @@ public class PropertyReader{
         return true;
     }
 
-    private static Object getValue(String field, Object objectMethod){
+    private static<T> Object getValue(String field, T objectMethod){
 
+       if(objectMethod.getClass().isArray()){
+
+           getArrayInnerClass(objectMethod.getClass());
+           return  (T[])Arrays
+                   .stream(((T[]) objectMethod))
+                   .map(item -> getValue(field,item))
+                   .toArray();
+       }
        Optional<Method> method = getPropertyMethod(field,objectMethod.getClass());
        if(!method.isPresent()){
            return null;
        }
         try {
-            return method.get().invoke(objectMethod, (Object[]) null);
+            return (T)method.get().invoke(objectMethod, (T[]) null);
         }catch(Exception e) {
             return null;
         }
