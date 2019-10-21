@@ -187,9 +187,13 @@ public class DateUtil{
     }
 
     public static String parseDateToString(LocalDate value){
+        return parseDateToString(value,DateTimeFormatter.ISO_LOCAL_DATE);
+    }
+
+    public static String parseDateToString(LocalDate value,DateTimeFormatter formatter){
         try{
             if(value!=null)
-              return value.format(DateTimeFormatter.ISO_LOCAL_DATE);
+              return value.format(formatter);
           }catch(Exception e){
           }
           return null;
