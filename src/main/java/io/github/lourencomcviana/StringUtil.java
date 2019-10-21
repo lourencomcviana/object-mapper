@@ -4,8 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.text.Normalizer;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class StringUtil {
     public static String replaceMoneyVal(String money){
@@ -41,9 +44,25 @@ public class StringUtil {
         try {
             return mapper.writeValueAsString(obj);
         }catch (JsonProcessingException e){
-            return "{\"erro\":\"não foi possível converter objeto para string\"}";
+            try {
+                HashMap<String, String> detail = new HashMap<>();
+                detail.put("erro","não foi possível converter objeto para string");
+                detail.put("objeto",obj.getClass().getName());
+                detail.put("exception", e.getMessage());
+                if(e.getCause()!=null) {
+                    detail.put("cause", e.getCause().getMessage());
+                }
+                IntStream.range(0, e.getStackTrace().length-1).parallel().forEach(i ->{
+                    detail.put("stacktrace "+i,e.getStackTrace()[i].toString());
+                });
+
+                return mapToJson(detail);
+            }catch (Exception ee){
+                return "{\"erro\":\"não foi possível converter objeto para string\"}";
+            }
         }
     }
+
 
     public static String mapToJson( HashMap<String,String> details){
         StringBuilder json= new StringBuilder();
