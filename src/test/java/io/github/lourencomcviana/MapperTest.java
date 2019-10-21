@@ -1,5 +1,6 @@
 package io.github.lourencomcviana;
 
+import com.sun.org.apache.xpath.internal.operations.Or;
 import io.github.lourencomcviana.mapper.test.Customer;
 import io.github.lourencomcviana.mapper.test.Name;
 import io.github.lourencomcviana.mapper.test.Order;
@@ -39,5 +40,32 @@ public class MapperTest {
 //        assertEquals(order.getBillingAddress().getCity(), orderDTO.getBillingCity());
     }
 
+
+
+    @DisplayName("same class mapping")
+    @org.junit.jupiter.api.Test
+    void sameClassMapping() {
+        Order order = Order.builder().customer(
+                Customer.builder()
+                        .name(
+                                Name.builder()
+                                        .firstName("maria")
+                                        .lastName("antoni")
+                                        .build() )
+                        .build())
+                .build();
+
+
+        Order newOrder = Order.builder().payd(false).sauce(true).build();
+        ModelMapper modelMapper = new ModelMapper();
+        modelMapper.getConfiguration().setSkipNullEnabled(true);
+        modelMapper.map(order,newOrder);
+
+
+
+        assertEquals(false, newOrder.getPayd());
+        assertEquals(true, newOrder.getSauce());
+        assertEquals("maria", newOrder.getCustomer().getName().getFirstName());
+    }
 
 }
