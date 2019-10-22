@@ -1,6 +1,6 @@
 package io.github.lourencomcviana;
 
-import com.sun.org.apache.xpath.internal.operations.Or;
+
 import io.github.lourencomcviana.mapper.test.Customer;
 import io.github.lourencomcviana.mapper.test.Name;
 import io.github.lourencomcviana.mapper.test.Order;

@@ -11,6 +11,7 @@ import java.util.List;
 @Getter
 @Setter
 public class Order extends BaseOrder {
+    Long id;
     Customer customer;
     Address billingAddress;
     Address[] billingAddressArray;

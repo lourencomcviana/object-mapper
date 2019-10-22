@@ -23,7 +23,7 @@ apply plugin: 'maven'
 
 archivesBaseName = 'object-mapper'
 group = 'io.github.lourencomcviana'
-version = '0.0.9-SNAPSHOT'
+version = '0.1.0-SNAPSHOT'
 
 description = "object-mapper"
 
