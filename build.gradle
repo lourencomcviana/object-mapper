@@ -19,6 +19,7 @@ apply plugin: 'com.bmuschko.nexus'
 apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'maven'
+
 //apply from: 'security.properties'
 
 archivesBaseName = 'object-mapper'
@@ -34,6 +35,7 @@ tasks.withType(JavaCompile) {
 	options.encoding = 'UTF-8'
 }
 
+//apply from: 'gradle/maven.gradle'
 
 repositories {
 //    maven {
@@ -48,7 +50,7 @@ repositories {
 }
 dependencies {
 //    compile group: 'org.apache.commons', name: 'commons-io', version:'1.3.2'
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version:'2.9.0'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version:'2.9.10'
     compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-xml', version:'2.9.2'
 
     compile group: 'org.slf4j', name:'slf4j-api', version: '1.7.2'
@@ -57,10 +59,10 @@ dependencies {
 
     compile group: 'org.modelmapper', name: 'modelmapper', version: '2.3.5'
 
-    compileOnly 'org.projectlombok:lombok:1.18.10'
+    compile 'org.projectlombok:lombok:1.18.10'
     annotationProcessor 'org.projectlombok:lombok:1.18.10'
 
-    testCompileOnly 'org.projectlombok:lombok:1.18.10'
+    testCompile 'org.projectlombok:lombok:1.18.10'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.10'
 
     testCompile 'org.junit.jupiter:junit-jupiter-api:5.4.2'
@@ -99,11 +101,12 @@ jar {
     manifest {
         attributes(
                 'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
-                'Main-Class': 'io.github.lourencomcviana.Cmd',
+                'Main-Class': "${group}.Cmd",
                 'Implementation-Version': this.version
         )
     }
 }
+
 
 task createPom {
     pom {
@@ -111,8 +114,16 @@ task createPom {
             groupId this.group
             artifactId this.archivesBaseName
             version  this.version
-
+            description this.description
+            url 'https://github.com/lourencomcviana/object-mapper'
+            packaging 'jar'
             inceptionYear '2019'
+            properties {
+                "maven.compiler.source" "8"
+                "maven.compiler.target" "8"
+                "java.version" "8"
+                "project.build.sourceEncoding" 'UTF-8'
+            }
             licenses {
                 license {
                     name 'GNU GENERAL PUBLIC LICENSE'
@@ -120,6 +131,38 @@ task createPom {
                     distribution 'repo'
                 }
             }
+
         }
+    }.withXml {
+        asNode().appendNode('build').with {
+            appendNode('plugins').with {
+                appendNode('plugin').with {
+                    appendNode('groupId', 'org.apache.maven.plugins')
+                    appendNode('artifactId', 'maven-surefire-plugin')
+                    appendNode('configuration').with {
+                        appendNode('skipTests', 'true')
+                    }
+                }
+                appendNode('plugin').with {
+                    appendNode('groupId', 'org.apache.maven.plugins')
+                    appendNode('artifactId', 'maven-jar-plugin')
+                    appendNode('configuration').with {
+                        appendNode('archive').with {
+                            appendNode('manifest').with {
+                                appendNode('addClasspath', 'true')
+                                appendNode('mainClass', "${this.group}.Cmd")
+                                appendNode('classpathPrefix', "src")
+
+
+                            }
+                            appendNode('manifestEntries').with {
+                                appendNode('Implementation-Version', "${this.version}")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        asNode().appendNode('packaging','jar')
     }.writeTo("pom.xml")
 }

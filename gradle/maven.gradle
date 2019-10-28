@@ -1,0 +1,61 @@
+//if namme is createPom, generate pom automatically
+
+
+
+
+def pomGroup=project.group
+def pomDesc=project.description
+def pomName=project.archivesBaseName
+def pomVer=project.version
+
+def pomSourceCompatibility=project.sourceCompatibility
+
+def pomTargetCompatibility=project.targetCompatibility
+
+def pomDescription = project.description
+
+def pomUrl= 'https://github.com/lourencomcviana/object-mapper'
+
+def pomPackaging= 'jar'
+
+
+
+task createPom  {
+
+    println pomSourceCompatibility
+
+
+    //parâmetros básicos do pom. Reconhecidos pelo plugin
+    pom {
+        //noinspection GroovyAssignabilityCheck
+        project {
+
+            groupId pomGroup
+            artifactId pomDesc
+            name pomName
+            description pomDescription
+            url pomUrl
+            packaging pomPackaging
+            version pomVer
+            inceptionYear '2019'
+            //noinspection GroovyAssignabilityCheck
+            properties {
+                "maven.compiler.source" "8"
+                "maven.compiler.target" "8"
+                "java.version" "8"
+                "project.build.sourceEncoding" 'UTF-8'
+            }
+            licenses {
+                license {
+                    name 'GNU GENERAL PUBLIC LICENSE'
+                    url 'https://www.gnu.org/licenses/gpl.html'
+                    distribution 'repo'
+                }
+            }
+        }
+    }
+    .writeTo("pom.xml")
+
+}
+
+
