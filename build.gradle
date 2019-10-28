@@ -23,7 +23,7 @@ apply plugin: 'maven'
 
 archivesBaseName = 'object-mapper'
 group = 'io.github.lourencomcviana'
-version = '0.1.0-SNAPSHOT'
+version = '0.1.1-SNAPSHOT'
 
 description = "object-mapper"
 
@@ -88,4 +88,19 @@ nexus {
 
 test {
     useJUnitPlatform()
+}
+
+sourceSets {
+    main.java.srcDir "src/main/java"
+    main.resources.srcDir "src/main/resources"
+}
+
+jar {
+    manifest {
+        attributes(
+                'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
+                'Main-Class': 'io.github.lourencomcviana.Cmd',
+                'Implementation-Version': this.version
+        )
+    }
 }
