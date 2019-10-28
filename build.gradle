@@ -104,3 +104,22 @@ jar {
         )
     }
 }
+
+task createPom {
+    pom {
+        project {
+            groupId this.group
+            artifactId this.archivesBaseName
+            version  this.version
+
+            inceptionYear '2019'
+            licenses {
+                license {
+                    name 'GNU GENERAL PUBLIC LICENSE'
+                    url 'https://www.gnu.org/licenses/gpl.html'
+                    distribution 'repo'
+                }
+            }
+        }
+    }.writeTo("pom.xml")
+}
