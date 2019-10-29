@@ -23,11 +23,18 @@ class DateUtilTest {
 
     @BeforeAll
     public static void createData(){
+
+        testSource.put(LocalDate.of(2019,10,29), new String[]{
+                "2019-10-29", "2019-10-29 00:01:02"
+        });
+//
         testSource.put(LocalDate.of(2018,1,2), new String[]{
                 "2018-01-02",
                 "2018-1-2",
                 "2018-01-02 00:00:00"
         });
+
+
     }
 
     DateUtil dateUtil;

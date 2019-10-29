@@ -63,7 +63,7 @@ public class DateUtil{
     //private static final String TIME="(([01]\\d|2[0-4]):([0-5]\\d):([0-5]\\d)\\.?(\\d*))";
     private static final String ANO="(\\d{4})";
     private static final String MES="(0?[1-9]|1[012])";
-    private static final String DIA="([12]|0\\d|[12]\\d|3[01])";
+    private static final String DIA="([12]\\d|0\\d|3[01]|((?!\\d\\d)[1-9]))";
 
 
     public static final Pattern ISO_DATE_PATTERN=Pattern.compile("("+ANO+"-"+MES+"-"+DIA+")([T ]"+TIME+")?.*");
