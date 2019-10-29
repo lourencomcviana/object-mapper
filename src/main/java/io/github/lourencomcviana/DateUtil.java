@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 @Setter
 @Builder
 public class DateUtil{
-
+    //TODO: Replace numbered groups by named groups
     @Getter
     @Setter
     private static ZoneId defaultZoneId = ZoneId.systemDefault();
@@ -82,9 +82,9 @@ public class DateUtil{
 
     private static void setDefaultTime(DateUtil date,Matcher matcher){
         try{
-            date.setHora(Integer.parseInt(matcher.group(7)));
-            date.setMinuto(Integer.parseInt(matcher.group(8)));
-            date.setSegundo(Integer.parseInt(matcher.group(9)));
+            date.setHora(Integer.parseInt(matcher.group(8)));
+            date.setMinuto(Integer.parseInt(matcher.group(9)));
+            date.setSegundo(Integer.parseInt(matcher.group(10)));
         }catch(Exception e){
         }
     }
