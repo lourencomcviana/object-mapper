@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.github.lourencomcviana</groupId>
   <artifactId>object-mapper</artifactId>
-  <version>0.1.3-SNAPSHOT</version>
+  <version>0.1.4-SNAPSHOT</version>
   <description>object-mapper</description>
   <url>https://github.com/lourencomcviana/object-mapper</url>
   <inceptionYear>2019</inceptionYear>
@@ -96,7 +96,7 @@
               <classpathPrefix>src</classpathPrefix>
             </manifest>
             <manifestEntries>
-              <Implementation-Version>0.1.3-SNAPSHOT</Implementation-Version>
+              <Implementation-Version>0.1.4-SNAPSHOT</Implementation-Version>
             </manifestEntries>
           </archive>
         </configuration>
