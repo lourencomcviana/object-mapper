@@ -31,6 +31,11 @@ class DateUtilTest {
                 "10/07/2019 01:00:01"
         });
 
+        testSourceTime.put(LocalDateTime.of(2019,7,10,0,0,0,0), new String[]{
+                "10/07/2019",
+                "10/07/2019 00:00:00"
+        });
+
         testSource.put(LocalDate.of(2019,10,29), new String[]{
                 "2019-10-29", "2019-10-29 00:01:02"
         });
@@ -46,6 +51,9 @@ class DateUtilTest {
                 "2018-1-2T22:34:52",
                 "2018-01-02T22:34:52"
         });
+
+
+
 
     }
 
