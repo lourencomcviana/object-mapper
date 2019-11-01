@@ -25,6 +25,12 @@ class DateUtilTest {
     @BeforeAll
     public static void createData(){
 
+
+        testSource.put(LocalDate.of(2019,7,10), new String[]{
+                "10/07/2019",
+                "10/07/2019 01:00:01"
+        });
+
         testSource.put(LocalDate.of(2019,10,29), new String[]{
                 "2019-10-29", "2019-10-29 00:01:02"
         });
@@ -34,7 +40,6 @@ class DateUtilTest {
                 "2018-1-2",
                 "2018-01-02 00:00:00"
         });
-
 
         testSourceTime.put(LocalDateTime.of(2018,1,2,22,34,52,00), new String[]{
                 "2018-01-02T22:34:52",
