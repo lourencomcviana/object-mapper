@@ -1,22 +1,22 @@
 package io.github.lourencomcviana;
 
-import io.github.lourencomcviana.exceptions.MethodNotFoundException;
 import io.github.lourencomcviana.exceptions.PropertyNotFoundException;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 
 import java.beans.Statement;
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @Slf4j
 public class PropertyReader{
+
+    private PropertyReader(){
+
+    }
 
     private static final String[] GET_METHOD_ALIASES =  new String []{"get","is","has"};
 
@@ -50,7 +50,7 @@ public class PropertyReader{
         return getPropertyValue(obj,parsePath(string));
     }
     @SuppressWarnings("unchecked")
-    public static <T> T getPropertyValue(Object obj, LinkedList<String> parts) {
+    public static <T> T getPropertyValue(Object obj, List<String> parts) {
         return propertyValue(obj,parts,null);
     }
 
@@ -59,15 +59,15 @@ public class PropertyReader{
         setPropertyValue(obj,parsePath(string),value);
     }
 
-    public static void setPropertyValue(Object obj, LinkedList<String> parts,Object value){
+    public static void setPropertyValue(Object obj, List<String> parts,Object value){
         propertyValue(obj,parts,value);
     }
     @SuppressWarnings("unchecked")
-    private static <T> T propertyValue(Object obj, LinkedList<String> parts,Object value) {
+    private static <T> T propertyValue(Object obj, List<String> partsOriginal,Object value) {
         Object ret = obj;
+        LinkedList<String> parts =  new LinkedList(partsOriginal);
 
-
-        while(parts.size()>0){
+        while(!parts.isEmpty()){
             if(ret ==null){
                 return null;
             }
@@ -75,42 +75,8 @@ public class PropertyReader{
             String field=parts.pop();
 
             try {
-
-//                Class<?> clazz = ret.getClass();
-//                if(Iterable.class.isAssignableFrom(clazz)){
-//                    if(field.matches("\\d+")){
-//
-//                        try{
-//                            Integer id=Integer.parseInt(field);
-//                            ret=((Collection)ret).toArray()[id];
-//                        }catch(ClassCastException  e){
-//                            return null;
-//                        }
-//                        return getPropertyValue(ret,parts);
-//                    }else{
-//                        LinkedList objList= new LinkedList();
-//                        for(Object item :(Iterable)ret){
-//                            LinkedList<String> newParts=(LinkedList<String>)parts.clone();
-//                            newParts.addFirst(field);
-//                            Object objssaida =getPropertyValue(item,newParts);
-//                            // caso a saida tb tenha sido uma lista
-//                            if(Iterable.class.isAssignableFrom(objssaida.getClass())){
-//                                for(Object subItem :(Iterable)objssaida){
-//                                    objList.add(subItem);
-//                                }
-//                            }else{
-//                                objList.add(objssaida);
-//                            }
-//                        }
-//                        return (T)objList;
-//                    }
-//                }else{
-//
-//
-//                }
-
                 if(value!=null ) {
-                    if(parts.size() == 0){
+                    if(parts.isEmpty()){
                         setValue(field,ret,value);
                     }
                     ret  =setNewValueCheck(field,ret);
@@ -157,9 +123,9 @@ public class PropertyReader{
 
                     newObj = Array.newInstance(arrayInnerClass ,1);
 
-                    ((Object[])newObj)[0]=arrayInnerClass.newInstance();
+                    ((Object[])newObj)[0]=arrayInnerClass.getDeclaredConstructor().newInstance();
                 } else{
-                    newObj = params[0].getType().newInstance();
+                    newObj = params[0].getType().getDeclaredConstructor().newInstance();
                 }
 
                 method.invoke(objectMethod, newObj);
@@ -179,6 +145,7 @@ public class PropertyReader{
                 fatherClassName = fatherClassName.substring(0, fatherClassName.length() - 1);
                 return Optional.of( Class.forName(fatherClassName));
             }catch (Exception e){
+                return Optional.empty();
             }
         }
         return Optional.empty();
@@ -225,7 +192,7 @@ public class PropertyReader{
        if(objectMethod.getClass().isArray()){
 
            getArrayInnerClass(objectMethod.getClass());
-           return  (T[])Arrays
+           return  Arrays
                    .stream(((T[]) objectMethod))
                    .map(item -> getValue(field,item))
                    .toArray();
@@ -235,7 +202,7 @@ public class PropertyReader{
            return null;
        }
         try {
-            return (T)method.get().invoke(objectMethod, (T[]) null);
+            return method.get().invoke(objectMethod, (T[]) null);
         }catch(Exception e) {
             return null;
         }
@@ -251,7 +218,6 @@ public class PropertyReader{
     }
 
     public static Optional<Method> getPropertyMethod(String fieldOrMethodName,Class clazz){
-        String prop;
 
         if(clazz == null){
             return Optional.empty();
@@ -309,7 +275,7 @@ public class PropertyReader{
     }
 
     public static Map<String,String>  fields(Object obj){
-        Map<String,String> list = new HashMap<String,String>();
+        Map<String,String> list = new HashMap<>();
         for (Field f : obj.getClass().getDeclaredFields()) {
             String property=f.getName();
             try{
@@ -352,12 +318,50 @@ public class PropertyReader{
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> T mergeObjectss(T first, T second) throws IllegalAccessException, InstantiationException {
+    public static <T> T mergeObjectss(T first, T second) throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
         Class<?> clazz = first.getClass();
-        Object returnValue = clazz.newInstance();
+        Object returnValue = clazz.getDeclaredConstructor().newInstance();
         return mergeObjects((T) returnValue,first,second,false);
     }
+     private static <T> void  mergeobject(T returnValue,T first, T second,String getPropertyName,String fieldName,String setPropertyName , boolean force){
+         Object value1 = null;
+         Object value2 = null;
+         boolean cont = true;
+         try {
+             value1 = getPropertyValue(first,fieldName);
+         } catch (SecurityException e) {
+             log.warn("metodo set de "+fieldName+" nao esta acessivel ");
+             cont = false;
+         }
+         try {
+             value2 = getPropertyValue(second,fieldName);
+         } catch (SecurityException e) {
+             log.warn("metodo set de "+getPropertyName+" nao esta acessivel ");
+             cont = false;
+         }
+         catch (Exception e){
+             log.error("erro desconhecido ao acessar proriedade "+getPropertyName+" nao existe ",e);
+             cont = false;
+         }
 
+         if(cont) {
+             Object value;
+             if (force && value2 != null) {
+                 value = value2;
+             } else {
+                 value = (value1 != null) ? value1 : value2;
+             }
+
+             try {
+                 Statement stmt = new Statement(returnValue, setPropertyName, new Object[]{value});
+                 stmt.execute();
+             } catch (NullPointerException | java.lang.IllegalArgumentException | SecurityException | NoSuchMethodException e) {
+                 log.info("variável não tem valor");
+             } catch (Exception e) {
+                 log.error("erro desconhecido ao acessar proriedade " + setPropertyName  , e);
+             }
+         }
+     }
     @SuppressWarnings("unchecked")
     private static <T> T mergeObjects(T returnValue,T first, T second,boolean force) {
         if(returnValue!=null&&first!=null&&second!=null) {
@@ -371,59 +375,7 @@ public class PropertyReader{
                     String fieldName = toFieldName(getPropertyName);
                     String setPropertyName = toSetPropertyName( fieldName);
 
-                    Object value1 ;
-                    Object value2 ;
-
-                    try {
-                        value1 = getPropertyValue(first,fieldName);
-                    } catch (SecurityException e) {
-                        log.warn("metodo set de "+fieldName+" nao esta acessivel em "+clazz.getName());
-                        continue;
-                    }
-                    try {
-                        value2 = getPropertyValue(second,fieldName);
-                    } catch (SecurityException e) {
-                        log.warn("metodo set de "+getPropertyName+" nao esta acessivel em "+second.getClass().getName());
-                        continue;
-                    }
-
-                    catch (Exception e){
-                        log.error("erro desconhecido ao acessar proriedade "+getPropertyName+" nao existe em "+clazz.getName(),e);
-                        continue;
-                    }
-
-                    Object value;
-                    if (force && value2 != null) {
-                        value = value2;
-                    } else {
-                        value = (value1 != null) ? value1 : value2;
-                    }
-
-                    //Method setMethod;
-                    try {
-                        if(returnValue!=null && setPropertyName!=null) {
-                            Statement stmt = new Statement(returnValue, setPropertyName, new Object[]{value});
-                            stmt.execute();
-                        }
-                    }catch (NullPointerException e){
-                        //log.warn("metodo "+setPropertyName+" é nullo em "+clazz.getName());
-                        continue;
-                    }catch(java.lang.IllegalArgumentException e ){
-                        //log.warn("metodo "+setPropertyName+" nao existe em "+clazz.getName());
-                        continue;
-                    } catch (SecurityException e) {
-                        //log.warn("metodo "+setPropertyName+" nao esta acessivel em "+clazz.getName());
-                        continue;
-                    }
-                    catch (NoSuchMethodException e) {
-                        //log.warn("metodo "+setPropertyName+" nao existe em "+clazz.getName());
-                        continue;
-                    }
-                    catch (Exception e){
-                        log.error("erro desconhecido ao acessar proriedade "+setPropertyName+" nao existe em "+clazz.getName(),e);
-                        continue;
-                    }
-
+                    mergeobject(returnValue,first,second,getPropertyName,fieldName,setPropertyName,force);
                 }
             }
         }
@@ -440,13 +392,13 @@ public class PropertyReader{
             String propertyName = "get";
             String isPropertyName = "is";
             if(Character.isLowerCase(fieldName.charAt(0))){
-                char chars[] = fieldName.toCharArray();
+                char[] chars = fieldName.toCharArray();
                 chars[0] = Character.toUpperCase(chars[0]);
                 propertyName +=  new String(chars);
                 isPropertyName +=new String(chars);
             }else{
                 propertyName += fieldName;
-                isPropertyName +=new String(fieldName);
+                isPropertyName += fieldName;
             }
             Method method;
             try {
@@ -465,6 +417,7 @@ public class PropertyReader{
                     return isValid(result);
 
                 } catch (Exception e) {
+                    return false;
                 }
             }
         }
@@ -490,8 +443,7 @@ public class PropertyReader{
     private static LinkedList<String> parsePath(String path){
         String[] parts = path.split("\\.");
         if(parts.length >0){
-            LinkedList<String> arr=new LinkedList<String>(Arrays.asList(parts));
-            return arr;
+            return new LinkedList<>(Arrays.asList(parts));
         }
         return new LinkedList<>();
     }

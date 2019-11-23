@@ -4,13 +4,16 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.text.Normalizer;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class StringUtil {
+
+    private StringUtil (){
+
+    }
     public static String replaceMoneyVal(String money){
         if(money.isEmpty()){
             return null;
@@ -32,11 +35,11 @@ public class StringUtil {
     public static String normalizer(String param) {
         String t1 = "áãàâäçéèëêùûüúóôöõïîíìÁÀÂÄÃÇÉÈËÊÙÛÜÚÓÔÖÕÏÎÍÌ";
         String t2 = "aaaaaceeeeuuuuooooiiiiAAAAACEEEEUUUUOOOOIIII";
-        String s = param;
+        StringBuilder s = new StringBuilder( param);
         for (int i = 0; i < t1.length(); i++) {
-            s = "replace(" + s + ",'" + t1.charAt(i) + "','" + t2.charAt(i) + "')";
+            s.append("replace(").append(s).append(",'").append(t1.charAt(i)).append("','").append(t2.charAt(i)).append("')");
         }
-        return s;
+        return s.toString();
     }
 
     public static String objectToJson(Object obj){
@@ -52,9 +55,9 @@ public class StringUtil {
                 if(e.getCause()!=null) {
                     detail.put("cause", e.getCause().getMessage());
                 }
-                IntStream.range(0, e.getStackTrace().length-1).parallel().forEach(i ->{
-                    detail.put("stacktrace "+i,e.getStackTrace()[i].toString());
-                });
+                IntStream.range(0, e.getStackTrace().length-1).parallel().forEach(i ->
+                    detail.put("stacktrace "+i,e.getStackTrace()[i].toString())
+                );
 
                 return mapToJson(detail);
             }catch (Exception ee){
@@ -64,13 +67,13 @@ public class StringUtil {
     }
 
 
-    public static String mapToJson( HashMap<String,String> details){
+    public static String mapToJson( Map<String,String> details){
         StringBuilder json= new StringBuilder();
         json.append("{");
 
-        String param= details.entrySet().stream().map((entry)->{
-            return (stringToJsonParameter(entry.getKey(),entry.getValue()));
-        }).collect(Collectors.joining(", "));
+        String param= details.entrySet().stream().map(entry->
+             (stringToJsonParameter(entry.getKey(),entry.getValue()))
+        ).collect(Collectors.joining(", "));
         json.append(param);
 
         json.append("}");

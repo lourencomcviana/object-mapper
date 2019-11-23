@@ -38,7 +38,7 @@ public class CollectionComparer<T> {
         } else if (oldList == null && newList != null) {
             inserted = oldList;
 
-        } else if (oldList != null && newList != null) {
+        } else if (oldList != null ) {
             // any item that has no id is considered inserted
             List<T> insertedList = newList.stream()
                     .filter(item -> id(item,oldList).isNew())

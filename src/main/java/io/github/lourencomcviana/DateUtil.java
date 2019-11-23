@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 @Setter
 @Builder
 public class DateUtil{
-    //TODO: Replace numbered groups by named groups
+
     @Getter
     @Setter
     private static ZoneId defaultZoneId = ZoneId.systemDefault();
@@ -51,43 +51,48 @@ public class DateUtil{
 
     private static final LinkedList<SimpleDateFormat> formats= new LinkedList<>();
 
-    private static final String HORA="([01]\\d|2[0-4])";
+    private static final String CONST_HORA ="([01]\\d|2[0-4])";
 
     private static final String MINUTO_SEGUNDO="([0-5]\\d)";
     private static final String MILISEGUNDOS="(\\d*)";
 
-    private static final String TIME="("+HORA+":"+MINUTO_SEGUNDO+":"+MINUTO_SEGUNDO+"\\.?"+MILISEGUNDOS+")";
+    private static final String TIME="("+ CONST_HORA +":"+MINUTO_SEGUNDO+":"+MINUTO_SEGUNDO+"\\.?"+MILISEGUNDOS+")";
 
-    private static final String ONLY_NUMBER_TIME="("+HORA+MINUTO_SEGUNDO+MINUTO_SEGUNDO+MILISEGUNDOS+")";
+    private static final String ONLY_NUMBER_TIME="("+ CONST_HORA +MINUTO_SEGUNDO+MINUTO_SEGUNDO+MILISEGUNDOS+")";
 
-    //private static final String TIME="(([01]\\d|2[0-4]):([0-5]\\d):([0-5]\\d)\\.?(\\d*))";
-    private static final String ANO="(\\d{4})";
-    private static final String MES="(0?[1-9]|1[012])";
-    private static final String DIA="([12]\\d|0\\d|3[01]|[0-9])";
+    private static final String CONST_ANO ="(\\d{4})";
+    private static final String CONST_MES ="(0?[1-9]|1[012])";
+    private static final String CONST_DIA ="([12]\\d|0\\d|3[01]|[0-9])";
 
 
-    public static final Pattern ISO_DATE_PATTERN=Pattern.compile("("+ANO+"-"+MES+"-"+DIA+")([T ]"+TIME+")?.*");
-    public static final Pattern DATE_BR_PATTERN=Pattern.compile("("+DIA+"\\/"+MES+"\\/"+ANO+")( "+TIME+")?.*");
-    public static final Pattern ONLY_NUMBER_PATTERN=Pattern.compile("("+ANO+MES+DIA+")( ?"+ONLY_NUMBER_TIME+")?.*");
+    public static final Pattern ISO_DATE_PATTERN=Pattern.compile("("+ CONST_ANO +"-"+ CONST_MES +"-"+ CONST_DIA +")([T ]"+TIME+")?.*");
+    public static final Pattern DATE_BR_PATTERN=Pattern.compile("("+ CONST_DIA +"\\/"+ CONST_MES +"\\/"+ CONST_ANO +")( "+TIME+")?.*");
+    public static final Pattern ONLY_NUMBER_PATTERN=Pattern.compile("("+ CONST_ANO + CONST_MES + CONST_DIA +")( ?"+ONLY_NUMBER_TIME+")?.*");
 
 
     static {
-        patterns.put(ISO_DATE_PATTERN,DateOrder.AnoMesDia);
-        patterns.put(DATE_BR_PATTERN,DateOrder.DiaMesAno);
-        patterns.put(ONLY_NUMBER_PATTERN,DateOrder.AnoMesDia);
+        patterns.put(ISO_DATE_PATTERN,DateOrder.ANO_MES_DIA);
+        patterns.put(DATE_BR_PATTERN,DateOrder.DIA_MES_ANO);
+        patterns.put(ONLY_NUMBER_PATTERN,DateOrder.ANO_MES_DIA);
     }
 
 
 
 
-    private static void setDefaultTime(DateUtil date,Matcher matcher){
+    private static int tryGetDefaultTime(Matcher matcher, int group){
         try{
-            date.setHora(Integer.parseInt(matcher.group(7)));
-            date.setMinuto(Integer.parseInt(matcher.group(8)));
-            date.setSegundo(Integer.parseInt(matcher.group(9)));
+            return Integer.parseInt(matcher.group(group));
         }catch(Exception e){
+            return 0;
         }
     }
+
+    private static void setDefaultTime(DateUtil date,Matcher matcher){
+        date.setHora(tryGetDefaultTime(matcher,7));
+        date.setMinuto(tryGetDefaultTime(matcher,8));
+        date.setSegundo(tryGetDefaultTime(matcher,9));
+    }
+
 
     private static DateUtil parse (String value,Pattern pattern,DateOrder order){
         if(value!=null){
@@ -98,19 +103,21 @@ public class DateUtil{
                 try{
                     DateUtil date = null;
                     switch (order){
-                        case AnoMesDia:
+                        case ANO_MES_DIA:
                             date = matcherAnoMesDia(matcher);
                             break;
-                        case DiaMesAno:
+                        case DIA_MES_ANO:
                             date = matcherDiaMesAno(matcher);
                             break;
-                        case MesDiaAno:
+                        case MES_DIA_ANO:
                             date = matcherMesDiaAno(matcher);
                             break;
                     }
                     setDefaultTime(date,matcher);
                     return date;
-                }catch(Exception e){}
+                }catch(Exception e){
+                    return null;
+                }
             }
             return null;
 
@@ -146,20 +153,16 @@ public class DateUtil{
     }
 
     private  static DateUtil parseDate(String value){
-        DateUtil date = null;
+        DateUtil date;
 
         for(var patternAndOrder : patterns.entrySet()){
             try {
                 date = parse(value, patternAndOrder.getKey(), patternAndOrder.getValue());
             }catch (Exception e){
+                date = null;
             }
             if(date!=null) return date;
         }
-//        date = parseDateIso(value);
-//        if(date!=null) return date;
-//
-//        date = parseDateBr(value);
-//        if(date!=null) return date;
 
         return DateUtil.builder().build();
     }
@@ -182,6 +185,7 @@ public class DateUtil{
             if(value!=null)
                 return value.format(formatter);
         }catch(Exception e){
+            return null;
         }
         return null;
     }
@@ -195,6 +199,7 @@ public class DateUtil{
             if(value!=null)
               return value.format(formatter);
           }catch(Exception e){
+            return null;
           }
           return null;
     }
@@ -222,7 +227,7 @@ public class DateUtil{
     }
 
     enum DateOrder{
-        AnoMesDia, DiaMesAno, MesDiaAno
+        ANO_MES_DIA, DIA_MES_ANO, MES_DIA_ANO
     }
 }
 
