@@ -11,6 +11,7 @@ plugins {
     id "java"
     id "maven"
     id "idea"
+    id "io.freefair.lombok" version "4.1.5" //https://docs.freefair.io/gradle-plugins/4.1.5/reference/
    // id "com.jfrog.bintray" version "1.8.1"
 }
 

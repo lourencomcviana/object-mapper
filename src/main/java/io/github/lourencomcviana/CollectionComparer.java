@@ -70,15 +70,25 @@ public class CollectionComparer<T> {
         New newId = id(newItem,oldItens);
         New oldId = id(oldItem,oldItens);
 
+        Optional newItemOpt;
+        Optional oldItemOpt;
+
+        Object newItemObj;
+        Object oldItemObj;
+
         if(!newId.isPresent() || !oldId.isPresent()){
             return false;
         }
-        return  newId.getItem().get().equals( oldId.getItem().get());
-//
-//        PropertyReader.getPropertyValue(newItem, idFieldName)
-//                .equals(
-//                        PropertyReader.getPropertyValue(oldItem, idFieldName)
-//                )
+        newItemOpt = newId.getItem();
+        oldItemOpt = oldId.getItem();
+
+        if(!newItemOpt.isPresent()  || !oldItemOpt.isPresent() ){
+            return false;
+        }
+        oldItemObj=oldItemOpt.get();
+        newItemObj= newItemOpt.get();
+
+        return newItemObj.equals(oldItemObj);
 
     }
     private New<Object> id(Object object, Collection<T> oldItens){

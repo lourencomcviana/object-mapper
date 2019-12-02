@@ -1,8 +1,8 @@
 package io.github.lourencomcviana;
 
 import io.github.lourencomcviana.exceptions.PropertyNotFoundException;
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import java.beans.Statement;
@@ -11,8 +11,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-@Slf4j
-public class PropertyReader{
+
+public class PropertyReader {
+
+    private static final Logger log = LoggerFactory.getLogger(PropertyReader.class);
 
     private PropertyReader(){
 
@@ -189,18 +191,18 @@ public class PropertyReader{
 
     private static<T> Object getValue(String field, T objectMethod){
 
-       if(objectMethod.getClass().isArray()){
+        if(objectMethod.getClass().isArray()){
 
-           getArrayInnerClass(objectMethod.getClass());
-           return  Arrays
-                   .stream(((T[]) objectMethod))
-                   .map(item -> getValue(field,item))
-                   .toArray();
-       }
-       Optional<Method> method = getPropertyMethod(field,objectMethod.getClass());
-       if(!method.isPresent()){
-           return null;
-       }
+            getArrayInnerClass(objectMethod.getClass());
+            return  Arrays
+                    .stream(((T[]) objectMethod))
+                    .map(item -> getValue(field,item))
+                    .toArray();
+        }
+        Optional<Method> method = getPropertyMethod(field,objectMethod.getClass());
+        if(!method.isPresent()){
+            return null;
+        }
         try {
             return method.get().invoke(objectMethod, (T[]) null);
         }catch(Exception e) {
@@ -230,7 +232,7 @@ public class PropertyReader{
         return getPropertyMethod(fieldNameToPropName(fieldOrMethodName),0,clazz);
     }
 
-    private static Optional<Method> getPropertyMethod(@NonNull String field,int id, @NonNull Class clazz){
+    private static Optional<Method> getPropertyMethod( String field,int id,  Class clazz){
         if(id>=GET_METHOD_ALIASES.length){
             return Optional.empty();
         }
@@ -247,11 +249,11 @@ public class PropertyReader{
     }
 
 
-    public static Optional<Method> setPropertyMethod(@NonNull String field, @NonNull Class clazz, @NonNull Class parameter){
+    public static Optional<Method> setPropertyMethod(String field, Class clazz, Class parameter){
 
         String methodName = toSetPropertyName(field);
         try {
-            java.lang.reflect.Method method = clazz.getMethod(methodName, parameter);
+            Method method = clazz.getMethod(methodName, parameter);
             return Optional.of(method);
         }catch(Exception e) {
             return Optional.empty();
@@ -280,7 +282,7 @@ public class PropertyReader{
             String property=f.getName();
             try{
                 String methodName = "get" + property.substring(0, 1).toUpperCase() + property.substring(1, property.length());
-                java.lang.reflect.Method method = obj.getClass().getMethod(methodName, (Class<?>[])null);
+                Method method = obj.getClass().getMethod(methodName, (Class<?>[])null);
                 Object returnValue = method.invoke(obj, (Object[])null);
                 if(returnValue!=null){
                     list.put(property,returnValue.toString());
@@ -323,45 +325,45 @@ public class PropertyReader{
         Object returnValue = clazz.getDeclaredConstructor().newInstance();
         return mergeObjects((T) returnValue,first,second,false);
     }
-     private static <T> void  mergeobject(T returnValue,T first, T second,String getPropertyName,String fieldName,String setPropertyName , boolean force){
-         Object value1 = null;
-         Object value2 = null;
-         boolean cont = true;
-         try {
-             value1 = getPropertyValue(first,fieldName);
-         } catch (SecurityException e) {
-             log.warn("metodo set de "+fieldName+" nao esta acessivel ");
-             cont = false;
-         }
-         try {
-             value2 = getPropertyValue(second,fieldName);
-         } catch (SecurityException e) {
-             log.warn("metodo set de "+getPropertyName+" nao esta acessivel ");
-             cont = false;
-         }
-         catch (Exception e){
-             log.error("erro desconhecido ao acessar proriedade "+getPropertyName+" nao existe ",e);
-             cont = false;
-         }
+    private static <T> void  mergeobject(T returnValue,T first, T second,String getPropertyName,String fieldName,String setPropertyName , boolean force){
+        Object value1 = null;
+        Object value2 = null;
+        boolean cont = true;
+        try {
+            value1 = getPropertyValue(first,fieldName);
+        } catch (SecurityException e) {
+            log.warn("metodo set de {} nao esta acessivel",fieldName);
+            cont = false;
+        }
+        try {
+            value2 = getPropertyValue(second,fieldName);
+        } catch (SecurityException e) {
+            log.warn("metodo set de {} nao esta acessivel",getPropertyName);
+            cont = false;
+        }
+        catch (Exception e){
+            log.error("erro desconhecido ao acessar proriedade "+getPropertyName+" nao existe ",e);
+            cont = false;
+        }
 
-         if(cont) {
-             Object value;
-             if (force && value2 != null) {
-                 value = value2;
-             } else {
-                 value = (value1 != null) ? value1 : value2;
-             }
+        if(cont) {
+            Object value;
+            if (force && value2 != null) {
+                value = value2;
+            } else {
+                value = (value1 != null) ? value1 : value2;
+            }
 
-             try {
-                 Statement stmt = new Statement(returnValue, setPropertyName, new Object[]{value});
-                 stmt.execute();
-             } catch (NullPointerException | java.lang.IllegalArgumentException | SecurityException | NoSuchMethodException e) {
-                 log.info("variável não tem valor");
-             } catch (Exception e) {
-                 log.error("erro desconhecido ao acessar proriedade " + setPropertyName  , e);
-             }
-         }
-     }
+            try {
+                Statement stmt = new Statement(returnValue, setPropertyName, new Object[]{value});
+                stmt.execute();
+            } catch (NullPointerException | IllegalArgumentException | SecurityException | NoSuchMethodException e) {
+                log.info("variável não tem valor");
+            } catch (Exception e) {
+                log.error("erro desconhecido ao acessar proriedade " + setPropertyName  , e);
+            }
+        }
+    }
     @SuppressWarnings("unchecked")
     private static <T> T mergeObjects(T returnValue,T first, T second,boolean force) {
         if(returnValue!=null&&first!=null&&second!=null) {

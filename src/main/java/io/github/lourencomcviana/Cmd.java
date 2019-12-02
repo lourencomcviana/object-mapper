@@ -14,7 +14,6 @@ public class Cmd {
     public static void main (String[] args){
         try{
 
-            args =  new String[]{"-d 12/12/2012"};
             boolean run =false;
             if(args!=null && args.length>0){
                 List<String> foundArgs;
